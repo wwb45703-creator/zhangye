@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>核对台 · 账页核对</title>
+  <link rel="icon" type="image/png" href="icons/icon-32.png">
+  <link rel="stylesheet" href="ui.css">
+  <script type="module" src="workbench.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <img src="icons/icon-48.png" alt="" width="38" height="38">
+        <div><strong>账页核对</strong><span>采购工作台</span></div>
+      </div>
+      <div class="masthead-actions">
+        <span class="local-state"><i aria-hidden="true"></i> 本机存储</span>
+        <button class="button quiet" id="manage" type="button" disabled>
+          <svg class="icon" aria-hidden="true" viewBox="0 0 20 20"><path d="M3 5.5h14v11H3zM2.5 3.5h15v2h-15zM8 9h4"/></svg>
+          数据管理
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="page-title">
+      <div>
+        <div class="overline"><span class="line"></span> 采购订单 · 两期比对</div>
+        <h1>采购台账核对</h1>
+        <p>带入两期台账，按单号定位改动，导出可复核的差异清单。</p>
+      </div>
+      <span id="demo-badge" class="tag demo-tag" hidden>合成示例</span>
+    </section>
+    <div id="workbench-message" class="message main-message" role="status" hidden></div>
+
+    <div class="workspace-grid">
+      <aside class="inputs" aria-label="核对设置">
+        <section class="panel source-panel">
+          <div class="section-head">
+            <span class="step">01</span>
+            <div><h2>两期台账</h2><p>网页读取后选期别，或导入 CSV。</p></div>
+          </div>
+          <div id="sources"></div>
+          <button class="text-button advance" id="advance" type="button" hidden>
+            <span aria-hidden="true">↳</span> 本期转为下次上期
+          </button>
+        </section>
+        <section class="panel rule-panel">
+          <div class="section-head">
+            <span class="step">02</span>
+            <div><h2>核对规则</h2><p>用两期都稳定的单号匹配记录。</p></div>
+          </div>
+          <p id="rule-empty" class="hint">两期台账齐备后选择主键。</p>
+          <div id="rule-editor" hidden>
+            <label class="label" for="preset-select">复用已存规则</label>
+            <select id="preset-select"></select>
+            <div class="key-grid">
+              <label><span class="label">上期主键</span><select id="before-key"></select></label>
+              <label><span class="label">本期主键</span><select id="after-key"></select></label>
+            </div>
+            <label class="check-field detail-toggle">
+              <input type="checkbox" id="use-detail" aria-controls="detail-keys"> <span>一单多行，加入明细编号</span>
+            </label>
+            <div id="detail-keys" hidden>
+              <p class="hint">请选择两期都稳定的编号列，避免使用随排序变化的行号。</p>
+              <div class="key-grid">
+                <label><span class="label">上期明细编号</span><select id="before-detail-key"></select></label>
+                <label><span class="label">本期明细编号</span><select id="after-detail-key"></select></label>
+              </div>
+            </div>
+            <fieldset class="fields" id="fields-box">
+              <legend>同名核对字段</legend>
+              <p id="fields-hint" class="hint"></p>
+              <div id="fields-list"></div>
+            </fieldset>
+          </div>
+          <div class="rule-actions">
+            <button class="button" id="save-preset" type="button" disabled>保存规则</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="panel results" aria-labelledby="results-title">
+        <header class="results-head">
+          <div class="section-head">
+            <span class="step">03</span>
+            <div><h2 id="results-title">差异清单</h2><p id="result-summary">核对后可查看字段的前后值。</p></div>
+          </div>
+          <button class="button primary" id="compare" type="button" disabled>开始核对</button>
+          <button class="button" id="export" type="button" title="导出本次全部差异和核对说明" hidden disabled>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 20 20"><path d="M10 2.5v10m-3.5-3.5L10 12.5 13.5 9M4 13.5v3h12v-3"/></svg>
+            导出 Excel
+          </button>
+        </header>
+        <div id="empty-results" class="empty-results">
+          <div class="empty-illustration" aria-hidden="true">
+            <div class="paper-lines paper-back"><i></i><i></i><i></i></div>
+            <div class="paper-lines paper-front"><i></i><i></i><i></i><span>✓</span></div>
+          </div>
+          <h3 id="empty-title">带入两期台账开始核对</h3>
+          <p id="empty-description">在采购网页点击扩展读取表格，或从左侧导入两期 CSV。</p>
+          <button class="button primary" type="button" id="load-demo" disabled>载入示例</button>
+          <span class="empty-note" id="demo-note">示例包含变更、未见和重复单号</span>
+        </div>
+        <div id="result-content" hidden>
+          <div class="metrics" id="metrics" aria-label="按结果类型筛选"></div>
+          <div class="scope-note" id="scope-note"></div>
+          <div class="result-tools">
+            <button class="button quiet" type="button" id="all-results">全部差异</button>
+            <label class="search">
+              <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="4.5"/><path d="m12 12 4 4"/></svg>
+              <input type="search" id="result-search" aria-label="搜索主键或字段" placeholder="搜索主键或字段" maxlength="80">
+            </label>
+          </div>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="差异表格">
+            <table class="result-table">
+              <thead><tr><th scope="col">类型</th><th scope="col">主键</th><th scope="col">摘要</th><th scope="col" title="从第一条数据行的 1 起算">上期 / 本期行号</th><th scope="col"><span class="sr-only">明细</span></th></tr></thead>
+              <tbody id="results-body"></tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <span id="result-range"></span>
+            <div class="page-buttons">
+              <button class="button small" id="previous-page" type="button">上一页</button>
+              <button class="button small" id="next-page" type="button">下一页</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer class="workspace-footer">
+      <span>账页核对 · <span id="version"></span> 免费验证版</span>
+      <a href="privacy.html" target="_blank" rel="noopener">隐私说明</a>
+    </footer>
+  </main>
+
+  <dialog id="confirm-dialog" class="dialog">
+    <form method="dialog">
+      <h2 data-confirm-title></h2>
+      <p data-confirm-detail></p>
+      <div class="dialog-actions">
+        <button class="button" value="cancel" autofocus>取消</button>
+        <button class="button primary" value="ok" data-confirm-ok>确认</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="import-dialog" class="dialog" aria-labelledby="import-title">
+    <form id="import-form">
+      <h2 id="import-title">导入 CSV</h2>
+      <p id="import-instruction">使用逗号分隔的 CSV。首行为唯一表头，最多 5,000 条。</p>
+      <label class="label" for="csv-file">本地文件</label>
+      <input id="csv-file" type="file" accept=".csv,text/csv" required>
+      <label class="label" for="csv-encoding">文件编码</label>
+      <select id="csv-encoding">
+        <option value="auto">自动识别</option>
+        <option value="utf-8">UTF-8</option>
+        <option value="gb18030">GB18030 / GBK</option>
+      </select>
+      <p class="message" id="import-message" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button class="button" type="button" data-close="import-dialog">取消</button>
+        <button class="button primary" id="import-submit" type="submit">导入</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="preset-dialog" class="dialog" aria-labelledby="preset-title">
+    <form id="preset-form">
+      <h2 id="preset-title">保存核对规则</h2>
+      <p>保存主键和字段选择。下一期可直接复用。</p>
+      <label class="label" for="preset-name">规则名称</label>
+      <input type="text" id="preset-name" maxlength="40" required placeholder="例如 采购订单周核对" autocomplete="off">
+      <p class="hint">使用相同名称会覆盖原规则。</p>
+      <p class="message" id="preset-message" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button class="button" type="button" data-close="preset-dialog">取消</button>
+        <button class="button primary" id="preset-submit" type="submit">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="manage-dialog" class="dialog manage-dialog" aria-labelledby="manage-title">
+    <h2 id="manage-title">数据管理</h2>
+    <p>管理当前浏览器中的两期台账与规则。</p>
+    <div class="manage-actions">
+      <button class="button" id="backup" type="button">导出 JSON 备份</button>
+      <button class="button" id="restore" type="button">从备份恢复</button>
+      <input id="restore-file" type="file" accept=".json,application/json" hidden>
+    </div>
+    <div id="managed-data" class="managed-data"></div>
+    <p class="message" id="manage-message" role="status" hidden></p>
+    <div class="dialog-actions spread">
+      <button class="button danger" id="clear-data" type="button">清除全部</button>
+      <button class="button primary" type="button" data-close="manage-dialog">完成</button>
+    </div>
+  </dialog>
+
+  <dialog id="detail-dialog" class="dialog detail-dialog" aria-labelledby="detail-title">
+    <header class="detail-head">
+      <div><span class="tag" id="detail-kind"></span><h2 id="detail-title"></h2></div>
+      <button class="button quiet" type="button" data-close="detail-dialog">关闭</button>
+    </header>
+    <p id="detail-summary"></p>
+    <div id="detail-content"></div>
+  </dialog>
+</body>
+</html>

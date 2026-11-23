@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>账页核对</title>
+  <link rel="stylesheet" href="ui.css">
+  <script type="module" src="popup.js"></script>
+</head>
+<body class="popup">
+  <main class="popup-shell">
+    <header class="popup-brand">
+      <img src="icons/icon-48.png" alt="" width="36" height="36">
+      <div><strong>账页核对</strong><span>采购台账 · 免费试用</span></div>
+    </header>
+    <section class="popup-intro">
+      <h1>带入当前网页的台账</h1>
+      <p>先打开采购订单列表。读取后，选择一张表和它所属的期别。</p>
+      <button id="read-page" class="button primary full" type="button" disabled>读取当前页</button>
+    </section>
+    <p id="popup-message" class="message" role="status" hidden></p>
+    <section id="table-picker" class="popup-picker" hidden>
+      <label class="label" for="source-table">选择表格</label>
+      <select id="source-table"></select>
+      <p id="table-preview" class="hint"></p>
+      <label id="header-assumption" class="check-field header-assumption" hidden>
+        <input type="checkbox" id="confirm-header">
+        <span>网页未标记表头，确认将第一行用作列名。</span>
+      </label>
+      <div class="paired-buttons">
+        <button class="button" type="button" data-save="before">存为上期</button>
+        <button class="button primary" type="button" data-save="after">存为本期</button>
+      </div>
+    </section>
+    <div class="popup-periods" aria-label="两期台账">
+      <div><span>上期</span><strong id="popup-before">未添加</strong></div>
+      <div><span>本期</span><strong id="popup-after">未添加</strong></div>
+    </div>
+    <button id="open-workbench" class="button full" type="button">打开核对台 <span aria-hidden="true">↗</span></button>
+    <p class="popup-footnote">存入的表格仅保存在此浏览器。</p>
+  </main>
+  <dialog id="confirm-dialog" class="dialog">
+    <form method="dialog">
+      <h2 data-confirm-title></h2>
+      <p data-confirm-detail></p>
+      <div class="dialog-actions">
+        <button class="button" value="cancel" autofocus>取消</button>
+        <button class="button primary" value="ok" data-confirm-ok>确认</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

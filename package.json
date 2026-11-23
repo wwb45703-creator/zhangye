@@ -1,0 +1,17 @@
+{
+  "name": "zhangye-ledger-check",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test:public": "node tests/public-procurement.mjs",
+    "test:excel": "powershell -NoProfile -ExecutionPolicy Bypass -File tests/excel.ps1",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.65.0"
+  }
+}

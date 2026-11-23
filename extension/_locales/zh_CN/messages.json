@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "账页核对"
+  },
+  "extensionDescription": {
+    "message": "按单号核对两期网页台账或 CSV，找出差异和待复核记录，导出 Excel。"
+  }
+}
